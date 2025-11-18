@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en" class="transition-all duration-500 ease-in-out">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Himalayan Harvest Helper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        // Set theme on initial load
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            /* light bg */
+            color: #1f2937;
+            /* light text */
+            scroll-behavior: smooth;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        html.dark body {
+            background-color: #030712;
+            /* very dark bg */
+            color: #f3f4f6;
+            /* dark text */
+        }
+
+        #main-content {
+            transition: margin-right 0.5s ease-in-out;
+        }
+
+        /* Upgraded Header: Frosted Glass Effect */
+        .header-frosted {
+            background-color: rgba(255, 255, 255, 0.8);
+            /* Light mode */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.7);
+            /* gray-200 */
+        }
+
+        html.dark .header-frosted {
+            background-color: rgba(17, 24, 39, 0.8);
+            /* dark:gray-900 */
+            border-bottom: 1px solid rgba(55, 65, 81, 0.7);
+            /* dark:gray-700 */
+        }
+
+        /* Smooth Modal & Panel Transitions */
+        .modal,
+        .side-panel {
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        .modal-backdrop {
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal {
+            transform: scale(0.95) translateY(10px);
+        }
+
+        .side-panel {
+            transform: translateX(100%);
+            transition-duration: 0.5s;
+        }
+
+        /* Visible states */
+        .modal.is-visible,
+        .side-panel.is-visible {
+            visibility: visible;
+            opacity: 1;
+            transform: scale(1) translateX(0) translateY(0);
+        }
+
+        .modal-backdrop.is-visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Hero section - NEW: Using a live image and better overlay */
+        .hero-bg {
+            background-image:
+                linear-gradient(to right, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3)),
+        }
+
+        /* Hero section - NEW: Green gradient background as requested */
+        .hero-green-bg {
+            background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+            /* green-500 to green-700 */
+        }
+
+        /* Card animations */
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        html.dark .card-hover:hover {
+            box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.1), 0 4px 6px -2px rgba(34, 197, 94, 0.05);
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Custom spinner for button */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            display: inline-block;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Loading animation */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Skeleton loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite ease-in-out;
+        }
+
+        html.dark .skeleton {
+            background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+        }
+
+        .skeleton-text {
+            height: 1.25rem;
+            border-radius: 0.25rem;
+        }
+
+        .skeleton-title {
+            height: 1.75rem;
+            width: 60%;
+            margin-bottom: 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .skeleton-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* AI Helper Button "Ping" */
+        .fab-pulse {
+            position: relative;
+        }
+
+        .fab-pulse::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: #22c55e;
+            animation: fab-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+            z-index: -1;
+        }
+
+        @keyframes fab-ping {
+            0% {
+                transform: scale(1);
+                opacity: 0.75;
+            }
+
+            75%,
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        /* Recommendation Card "Staggered" Entry */
+        .card-recommendation-item {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fade-slide-in 0.5s ease-out forwards;
+        }
+
+        @keyframes fade-slide-in {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* AI Generated Content Styling (for Modals) */
+        .ai-content h1,
+        .ai-content h2,
+        .ai-content h3 {
+            font-size: 1.25rem;
+            line-height: 1.75rem;
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #16a34a;
+            /* green-700 */
+            display: flex;
+            align-items: center;
+        }
+
+        html.dark .ai-content h1,
+        html.dark .ai-content h2,
+        html.dark .ai-content h3 {
+            color: #4ade80;
+            /* green-400 */
+        }
+
+        .ai-content h3 .lucide {
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .ai-content ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+        }
+
+        .ai-content li {
+            margin-bottom: 0.35rem;
+            padding-left: 0.25rem;
+            line-height: 1.6;
+        }
+
+        .ai-content p {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .ai-content strong {
+            font-weight: 600;
+            color: #1f2937;
+            /* gray-800 */
+        }
+
+        html.dark .ai-content strong {
+            color: #f3f4f6;
+            /* gray-100 */
+        }
+
+        /* AI Report Modal Styling (Chat interface) */
+        .chat-bubble-user {
+            background-color: #e5e7eb;
+            /* gray-200 */
+            color: #1f2937;
+            /* gray-800 */
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        html.dark .chat-bubble-user {
+            background-color: #4b5563;
+            /* gray-600 */
+            color: #f3f4f6;
+            /* gray-100 */
+        }
+
+        .chat-bubble-ai {
+            background-color: #f0fdf4;
+            /* green-50 */
+            color: #1f2937;
+            /* gray-800 */
+            border-bottom-left-radius: 0.25rem;
+            border: 1px solid #dcfce7;
+            /* green-100 */
+        }
+
+        html.dark .chat-bubble-ai {
+            background-color: #1e3a2c;
+            /* Dark green-ish */
+            color: #f3f4f6;
+            /* gray-100 */
+            border: 1px solid #166534;
+            /* green-800 */
+        }
+
+        /* Improved Form Focus */
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 2px #22c55e, 0 0 0 0 rgba(0, 0, 0, 0);
+            /* Ring color */
+            border-color: #22c55e !important;
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+
+    <div id="main-content">
+        <header class="header-frosted sticky top-0 z-40">
+            <nav class="container mx-auto px-4 lg:px-6 py-3 flex justify-between items-center">
+                <a href="#" class="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                        stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
+                        </path>
+                    </svg>
+                    <span class="text-xl font-bold text-gray-800 dark:text-gray-200">Himalayan Harvest Helper</span>
+                </a>
+                <div class="hidden lg:flex items-center space-x-6">
+                    <a href="#dashboard"
+                        class="text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 font-medium transition-colors duration-200">Dashboard</a>
+                    <a href="#crop-advisor"
+                        class="text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 font-medium transition-colors duration-200">Crop
+                        Advisor</a>
+                    <a href="#high-value-crops"
+                        class="text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 font-medium transition-colors duration-200">High-Value
+                        Crops</a>
+                    <a href="#about"
+                        class="text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 font-medium transition-colors duration-200">About
+                        Us</a>
+
+                    <button id="theme-toggle"
+                        class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                        <i id="theme-icon-sun" class="w-5 h-5 block dark:hidden" data-lucide="sun"></i>
+                        <i id="theme-icon-moon" class="w-5 h-5 hidden dark:block" data-lucide="moon"></i>
+                    </button>
+
+                    <button id="login-nav-button"
+                        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-5 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-md">
+                        Login / Sign Up
+                    </button>
+                </div>
+                <button id="mobile-menu-button"
+                    class="lg:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-menu">
+                    <i data-lucide="menu"></i>
+                </button>
+            </nav>
+            <div id="mobile-menu"
+                class="hidden lg:hidden px-4 pb-4 space-y-2 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
+                <a href="#dashboard"
+                    class="block py-2 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400">Dashboard</a>
+                <a href="#crop-advisor"
+                    class="block py-2 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400">Crop
+                    Advisor</a>
+                <a href="#high-value-crops"
+                    class="block py-2 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400">High-Value
+                    Crops</a>
+                <a href="#about"
+                    class="block py-2 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400">About
+                    Us</a>
+
+                <button id="theme-toggle-mobile"
+                    class="w-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center py-2 px-5 rounded-lg transition duration-300">
+                    <i id="theme-icon-sun-mobile" class="w-5 h-5 block dark:hidden" data-lucide="sun"></i>
+                    <i id="theme-icon-moon-mobile" class="w-5 h-5 hidden dark:block" data-lucide="moon"></i>
+                    <span class="ml-2">Toggle Theme</span>
+                </button>
+
+                <button id="login-nav-button-mobile"
+                    class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-5 rounded-lg transition duration-300">
+                    Login / Sign Up
+                </button>
+            </div>
+        </header>
+
+        <section class="hero-green-bg">
+            <div class="container relative mx-auto px-4 lg:px-6 py-24 lg:py-32 text-center">
+                <h1 class="text-4xl lg:text-6xl font-bold mb-4 text-white drop-shadow-lg">Empowering Uttarakhand's
+                    Farmers with Data</h1>
+                <p class="text-lg lg:text-xl max-w-3xl mx-auto mb-8 text-white/90 drop-shadow-md">Get real-time market
+                    prices, weather alerts, and smart crop recommendations to increase your profitability.</p>
+                <a href="#crop-advisor"
+                    class="bg-white hover:bg-gray-100 text-green-700 font-bold py-3 px-8 rounded-full text-lg transition duration-300 transform hover:scale-105 shadow-lg hover:shadow-gray-100/30">Get
+                    Started</a>
+            </div>
+        </section>
+
+        <main class="container mx-auto px-4 lg:px-6 py-12">
+
+            <section id="dashboard" class="mb-16 scroll-mt-20" aria-labelledby="dashboard-title">
+                <h2 id="dashboard-title" class="text-3xl font-bold text-center text-gray-800 dark:text-gray-200 mb-8">
+                    Live Dashboard: Dehradun Region</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <div
+                        class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
+                        <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center">
+                            <i data-lucide="cloud-sun" class="mr-2 text-green-500"></i>
+                            Live Weather
+                        </h3>
+                        <div id="weather-info" aria-live="polite">
+                            <div id="weather-skeleton">
+                                <div class="flex justify-center items-center mb-2 space-x-4">
+                                    <div class="skeleton skeleton-avatar"></div>
+                                    <div class="skeleton skeleton-text" style="width: 100px; height: 3.5rem;"></div>
+                                </div>
+                                <div class="skeleton skeleton-text w-3/4 mx-auto mb-4"></div>
+                                <div class="grid grid-cols-2 gap-4 mt-4">
+                                    <div class="skeleton skeleton-text"></div>
+                                    <div class="skeleton skeleton-text"></div>
+                                    <div class="skeleton skeleton-text"></div>
+                                    <div class="skeleton skeleton-text"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg lg:col-span-2">
+                        <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center"><i
+                                data-lucide="bar-chart-2" class="mr-2 text-green-500"></i>Dehradun Mandi - Today's
+                            Prices (per Quintal)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th
+                                            class="p-3 font-semibold text-sm text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                            Crop</th>
+                                        <th
+                                            class="p-3 font-semibold text-sm text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                            Variety</th>
+                                        <th
+                                            class="p-3 font-semibold text-sm text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                            Price (₹)</th>
+                                        <th
+                                            class="p-3 font-semibold text-sm text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                            Trend</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="market-prices-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <tr id="market-price-skeleton">
+                                        <td class="p-3">
+                                            <div class="skeleton skeleton-text w-3/4"></div>
+                                        </td>
+                                        <td class="p-3">
+                                            <div class="skeleton skeleton-text w-2/3"></div>
+                                        </td>
+                                        <td class="p-3">
+                                            <div class="skeleton skeleton-text w-1/2"></div>
+                                        </td>
+                                        <td class="p-3">
+                                            <div class="skeleton skeleton-text w-3/4"></div>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="crop-advisor"
+                class="mb-16 bg-gray-50 dark:bg-gray-900 p-8 rounded-lg shadow-inner scroll-mt-20 border dark:border-gray-700">
+                <h2 id="advisor-title" class="text-3xl font-bold text-center text-gray-800 dark:text-gray-200 mb-2">
+                    Precision Crop Advisor</h2>
+                <p class="text-center text-gray-600 dark:text-gray-400 mb-8">Use your location and soil data to get
+                    AI-powered crop recommendations.</p>
+
+                <form id="crop-advisor-form" class="max-w-4xl mx-auto space-y-8">
+                    {% csrf_token %}
+                    <fieldset class="border dark:border-gray-700 p-6 rounded-lg">
+                        <legend class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 px-2">1. Your Location
+                        </legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="district"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Your
+                                    District</label>
+                                <select id="district"
+                                    class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm transition-colors duration-200">
+                                    <option value="">-- Choose District --</option>
+                                    <option value="dehradun">Dehradun</option>
+                                    <option value="haridwar">Haridwar</option>
+                                    <option value="nainital">Nainital</option>
+                                    <option value="almora">Almora</option>
+                                    <option value="pauri">Pauri Garhwal</option>
+                                    <option value="tehri">Tehri Garhwal</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="district-manual"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Or Enter
+                                    District Manually</label>
+                                <input type="text" id="district-manual"
+                                    class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm"
+                                    placeholder="e.g., Pithoragarh">
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Use
+                                    Current Location (Optional)</label>
+                                <p id="location-status" class="text-sm text-gray-600 dark:text-gray-400"></p>
+                            </div>
+                            <button id="get-location-btn" type="button"
+                                class="sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center shadow-sm hover:shadow-md transform hover:scale-105">
+                                <i data-lucide="map-pin" class="w-5 h-5 mr-2"></i>
+                                <span>Get Current Location</span>
+                            </button>
+                        </div>
+
+                        <div id="location-data-display" class="mt-6 hidden">
+                            <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+                                <h4 class="font-semibold text-base mb-3 text-gray-800 dark:text-gray-200">Your Area's
+                                    Conditions</h4>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="p-2 bg-blue-100 dark:bg-blue-900 rounded-full"><i
+                                                data-lucide="thermometer" class="w-4 h-4 text-blue-500"></i></span>
+                                        <div>
+                                            <span id="data-temp" class="font-bold text-sm">--°C</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block">Temp</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="p-2 bg-blue-100 dark:bg-blue-900 rounded-full"><i
+                                                data-lucide="droplet" class="w-4 h-4 text-blue-500"></i></span>
+                                        <div>
+                                            <span id="data-humidity" class="font-bold text-sm">--%</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block">Humidity</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="p-2 bg-blue-100 dark:bg-blue-900 rounded-full"><i
+                                                data-lucide="wind" class="w-4 h-4 text-blue-500"></i></span>
+                                        <div>
+                                            <span id="data-wind" class="font-bold text-sm">-- m/s</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block">Wind</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="p-2 bg-blue-100 dark:bg-blue-900 rounded-full"><i
+                                                data-lucide="user" class="w-4 h-4 text-blue-500"></i></span>
+                                        <div>
+                                            <span id="data-feels-like" class="font-bold text-sm">--°C</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block">Feels
+                                                Like</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="p-2 bg-green-100 dark:bg-green-900 rounded-full"><i
+                                                data-lucide="leaf" class="w-4 h-4 text-green-500"></i></span>
+                                        <div>
+                                            <span
+                                                class="font-bold text-sm text-green-600 dark:text-green-400">Required</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block">Soil
+                                                Quality</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="p-2 bg-green-100 dark:bg-green-900 rounded-full"><i
+                                                data-lucide="waves" class="w-4 h-4 text-green-500"></i></span>
+                                        <div>
+                                            <span
+                                                class="font-bold text-sm text-green-600 dark:text-green-400">Required</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block">Moisture</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-4">Please fill in the <strong
+                                        class="text-green-600 dark:text-green-400">'Soil Quality'</strong> section below
+                                    for the best results.</p>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="border dark:border-gray-700 p-6 rounded-lg">
+                        <legend class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 px-2">2. Soil Quality
+                        </legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="soil-type"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Soil Type
+                                    (Required)</label>
+                                <select id="soil-type"
+                                    class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm transition-colors duration-200">
+                                    <option value="">-- Select Soil Type --</option>
+                                    <option value="Loamy">Loamy</option>
+                                    <option value="Sandy">Sandy</option>
+                                    <option value="Clay">Clay</option>
+                                    <option value="Silty">Silty</option>
+                                    <option value="Peaty">Peaty</option>
+                                    <option value="Chalky">Chalky</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="soil-ph"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Soil pH
+                                    (Required)</label>
+                                <select id="soil-ph"
+                                    class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm transition-colors duration-200">
+                                    <option value="">-- Select pH Level --</option>
+                                    <option value="Very Acidic (Below 5.5)">Very Acidic (Below 5.5)</option>
+                                    <option value="Acidic (5.5 - 6.5)">Acidic (5.5 - 6.5)</option>
+                                    <option value="Neutral (6.5 - 7.5)">Neutral (6.5 - 7.5)</option>
+                                    <option value="Alkaline (7.5 - 8.5)">Alkaline (7.5 - 8.5)</option>
+                                    <option value="Very Alkaline (Above 8.5)">Very Alkaline (Above 8.5)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                            <div>
+                                <label for="soil-n"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nitrogen (N)
+                                    (kg/ha) (Optional)</label>
+                                <input type="number" id="soil-n"
+                                    class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm"
+                                    placeholder="e.g., 120">
+                            </div>
+                            <div>
+                                <label for="soil-p"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phosphorus
+                                    (P) (kg/ha) (Optional)</label>
+                                <input type="number" id="soil-p"
+                                    class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm"
+                                    placeholder="e.g., 60">
+                            </div>
+                            <div>
+                                <label for="soil-k"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Potassium
+                                    (K) (kg/ha) (Optional)</label>
+                                <input type="number" id="soil-k"
+                                    class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm"
+                                    placeholder="e.g., 40">
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <label for="additional-notes"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Additional Notes
+                                (Optional)</label>
+                            <textarea id="additional-notes" rows="3"
+                                class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm"
+                                placeholder="e.g., 'My farm is on a steep slope', 'Last crop was wheat', 'Access to irrigation'"></textarea>
+                        </div>
+                    </fieldset>
+
+                    <div class="text-center pt-4">
+                        <button id="get-recommendation-btn" type="submit"
+                            class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-12 text-lg rounded-lg transition-all duration-300 flex items-center justify-center mx-auto shadow-lg hover:shadow-green-500/30 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg"
+                            disabled>
+                            <i data-lucide="brain-circuit" class="w-6 h-6 mr-2"></i>
+                            <span id="btn-text">Get AI Recommendations</span>
+                            <span id="btn-spinner" class="spinner hidden ml-2"></span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="recommendation-result" class="mt-12 max-w-5xl mx-auto" aria-live="polite">
+                    <div id="recommendation-skeleton" class="hidden">
+                        <h3 class="text-2xl font-bold text-center mb-6 skeleton skeleton-title mx-auto w-1/2"></h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border dark:border-gray-700 shadow-md">
+                                <div class="skeleton skeleton-title w-3/4 mb-4"></div>
+                                <div class="skeleton skeleton-text mb-2"></div>
+                                <div class="skeleton skeleton-text w-5/6 mb-4"></div>
+                                <div class="skeleton skeleton-text w-1/2 h-8 rounded-lg mt-4"></div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border dark:border-gray-700 shadow-md">
+                                <div class="skeleton skeleton-title w-3/4 mb-4"></div>
+                                <div class="skeleton skeleton-text mb-2"></div>
+                                <div class="skeleton skeleton-text w-5/6 mb-4"></div>
+                                <div class="skeleton skeleton-text w-1/2 h-8 rounded-lg mt-4"></div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border dark:border-gray-700 shadow-md">
+                                <div class="skeleton skeleton-title w-3/4 mb-4"></div>
+                                <div class="skeleton skeleton-text mb-2"></div>
+                                <div class="skeleton skeleton-text w-5/6 mb-4"></div>
+                                <div class="skeleton skeleton-text w-1/2 h-8 rounded-lg mt-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+            </section>
+
+            <section id="high-value-crops" class="mb-16 scroll-mt-20" aria-labelledby="crops-title">
+                <h2 id="crops-title" class="text-3xl font-bold text-center text-gray-800 dark:text-gray-200 mb-8">
+                    Featured High-Value Crops</h2>
+                <div id="featured-crops-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden card-hover">
+                        <div class="w-full h-48 skeleton"></div>
+                        <div class="p-6">
+                            <div class="skeleton skeleton-title w-3/4 mb-4"></div>
+                            <div class="skeleton skeleton-text mb-2"></div>
+                            <div class="skeleton skeleton-text w-5/6 mb-4"></div>
+                            <div class="skeleton skeleton-text w-1/3 h-6 rounded-full"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden card-hover">
+                        <div class="w-full h-48 skeleton"></div>
+                        <div class="p-6">
+                            <div class="skeleton skeleton-title w-3/4 mb-4"></div>
+                            <div class="skeleton skeleton-text mb-2"></div>
+                            <div class="skeleton skeleton-text w-5/6 mb-4"></div>
+                            <div class="skeleton skeleton-text w-1/3 h-6 rounded-full"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden card-hover">
+                        <div class="w-full h-48 skeleton"></div>
+                        <div class="p-6">
+                            <div class="skeleton skeleton-title w-3/4 mb-4"></div>
+                            <div class="skeleton skeleton-text mb-2"></div>
+                            <div class="skeleton skeleton-text w-5/6 mb-4"></div>
+                            <div class="skeleton skeleton-text w-1/3 h-6 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="market-resources" class="mb-16 scroll-mt-20" aria-labelledby="market-title">
+                <h2 id="market-title" class="text-3xl font-bold text-center text-gray-800 dark:text-gray-200 mb-8">
+                    Market Links & Resources</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden card-hover p-6 flex flex-col">
+                        <div class="flex items-center mb-4">
+                            <span class="p-2 bg-green-100 dark:bg-green-900 rounded-full mr-3"><i
+                                    data-lucide="line-chart" class="text-green-500 w-6 h-6"></i></span>
+                            <h3 class="text-xl font-bold">e-NAM</h3>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4 flex-1">Pan-India online trading portal for
+                            agricultural commodities, linking farmers with traders and markets.</p>
+                        <a href="https://www.enam.gov.in" target="_blank" rel="noopener noreferrer"
+                            class="text-center bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-5 rounded-lg transition-all duration-300 transform hover:scale-105">
+                            Visit e-NAM
+                        </a>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden card-hover p-6 flex flex-col">
+                        <div class="flex items-center mb-4">
+                            <span class="p-2 bg-blue-100 dark:bg-blue-900 rounded-full mr-3"><i
+                                    data-lucide="bar-chart-big" class="text-blue-500 w-6 h-6"></i></span>
+                            <h3 class="text-xl font-bold">AGMARKNET</h3>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4 flex-1">Provides live market information on
+                            arrivals and prices of commodities from various mandis across India.</p>
+                        <a href="https://agmarknet.gov.in" target="_blank" rel="noopener noreferrer"
+                            class="text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg transition-all duration-300 transform hover:scale-105">
+                            Visit AGMARKNET
+                        </a>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden card-hover p-6 flex flex-col">
+                        <div class="flex items-center mb-4">
+                            <span class="p-2 bg-orange-100 dark:bg-orange-900 rounded-full mr-3"><i
+                                    data-lucide="shopping-bag" class="text-orange-500 w-6 h-6"></i></span>
+                            <h3 class="text-xl font-bold">B2B Marketplaces</h3>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4 flex-1">Platforms like IndiaMART or Ninjacart
+                            connect farmers and producers directly with bulk buyers, retailers, and exporters.</p>
+                        <a href="https://www.indiamart.com" target="_blank" rel="noopener noreferrer"
+                            class="text-center bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-5 rounded-lg transition-all duration-300 transform hover:scale-105">
+                            Visit IndiaMART
+                        </a>
+                    </div>
+
+                </div>
+            </section>
+
+            <section id="about"
+                class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg scroll-mt-20 border dark:border-gray-700 overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h2 id="about-title" class="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-4">About Us
+                        </h2>
+                        <p class="text-gray-600 dark:text-gray-400">
+                            The Himalayan Harvest Helper project is dedicated to bridging the information gap for
+                            farmers in Uttarakhand. By leveraging technology like AI, satellite imagery, weather data,
+                            and market analytics, we aim to provide actionable insights that boost farm productivity and
+                            profitability. Our goal is to support the sustainable growth of agriculture in the Himalayan
+                            region, ensuring that farmers get the rewards they deserve for their hard work.
+                        </p>
+                    </div>
+                    <div>
+                        <img src="https://source.unsplash.com/600x400/?farmer,india,himalayas"
+                            alt="Farmer in the Himalayas" class="rounded-lg shadow-md w-full h-full object-cover">
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="bg-gray-800 dark:bg-gray-900 text-white mt-16">
+            <div class="container mx-auto px-4 lg:px-6 py-8 text-center">
+                <p>&copy; 2025 Himalayan Harvest Helper. All Rights Reserved.</p>
+                <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">A project to empower farmers through
+                    technology.</p>
+            </div>
+        </footer>
+    </div>
+
+    <button id="ai-helper-open-button"
+        class="fab-pulse fixed bottom-6 right-6 bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-transform duration-300 hover:scale-110 z-50">
+        <i data-lucide="bot"></i>
+    </button>
+
+    <div id="ai-helper-panel-backdrop" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 z-50"></div>
+    <div id="ai-helper-panel"
+        class="side-panel fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-gray-800 shadow-xl z-50 flex flex-col"
+        role="dialog" aria-modal="true" aria-labelledby="ai-helper-title">
+        <div class="flex justify-between items-center p-4 border-b dark:border-gray-700 flex-shrink-0">
+            <h3 id="ai-helper-title" class="text-lg font-semibold flex items-center"><i data-lucide="bot"
+                    class="mr-2 text-green-600"></i>AI Harvest Helper</h3>
+            <button id="ai-helper-close-button"
+                class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"
+                aria-label="Close chat">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <div id="ai-chat-body" class="p-4 flex-1 overflow-y-auto space-y-4">
+            </div>
+        <div class="p-4 border-t dark:border-gray-700 flex space-x-2 flex-shrink-0">
+            <input type="text" id="ai-chat-input" placeholder="Type your question..."
+                class="flex-1 p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 dark:placeholder-gray-400">
+            <button id="ai-chat-send" class="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700"
+                aria-label="Send message">
+                <i data-lucide="send"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="login-modal-backdrop" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 z-50"></div>
+    <div id="login-modal" class="modal fixed inset-0 z-50 flex justify-center items-center p-4" role="dialog"
+        aria-modal="true" aria-labelledby="login-title">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h3 id="login-title" class="text-xl font-semibold">Login</h3>
+                <button id="login-close-button"
+                    class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"
+                    aria-label="Close login form">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form class="p-6 space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email
+                        Address</label>
+                    <input type="email" id="email"
+                        class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm"
+                        placeholder="you@example.com">
+                </div>
+                <div>
+                    <label for="password"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                    <input type="password" id="password"
+                        class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm"
+                        placeholder="••••••••">
+                </div>
+                <button type="submit"
+                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Login</button>
+                <p class="text-sm text-center text-gray-600 dark:text-gray-400">
+                    Don't have an account?
+                    <button type="button" id="show-register-button"
+                        class="font-medium text-green-600 dark:text-green-400 hover:underline">Register here</button>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <div id="register-modal-backdrop" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 z-50"></div>
+    <div id="register-modal" class="modal fixed inset-0 z-50 flex justify-center items-center p-4" role="dialog"
+        aria-modal="true" aria-labelledby="register-title">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h3 id="register-title" class="text-xl font-semibold">Create Account</h3>
+                <button id="register-close-button"
+                    class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"
+                    aria-label="Close registration form">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form class="p-6 space-y-4">
+                <div>
+                    <label for="reg-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full
+                        Name</label>
+                    <input type="text" id="reg-name"
+                        class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm"
+                        placeholder="Your Name">
+                </div>
+                <div>
+                    <label for="reg-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email
+                        Address</label>
+                    <input type="email" id="reg-email"
+                        class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm"
+                        placeholder="you@example.com">
+                </div>
+                <div>
+                    <label for="reg-password"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                    <input type="password" id="reg-password"
+                        class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm"
+                        placeholder="Create a password">
+                </div>
+                <button type="submit"
+                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Create
+                    Account</button>
+                <p class="text-sm text-center text-gray-600 dark:text-gray-400">
+                    Already have an account?
+                    <button type="button" id="show-login-button"
+                        class="font-medium text-green-600 dark:text-green-400 hover:underline">Login here</button>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <div id="report-modal-backdrop" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 z-50"></div>
+    <div id="report-modal" class="modal fixed inset-0 z-50 flex justify-center items-center p-4" role="dialog"
+        aria-modal="true" aria-labelledby="report-title">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div
+                class="flex justify-between items-center p-4 border-b dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
+                <h3 id="report-title" class="text-xl font-semibold flex items-center"><i data-lucide="file-text"
+                        class="mr-2 text-blue-500"></i>Full AI Report</h3>
+                <button id="report-close-button"
+                    class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"
+                    aria-label="Close full report">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div id="report-modal-content" class="p-6 overflow-y-auto space-y-4">
+                </div>
+        </div>
+    </div>
+
+    <div id="tips-modal-backdrop" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 z-50"></div>
+    <div id="tips-modal" class="modal fixed inset-0 z-50 flex justify-center items-center p-4" role="dialog"
+        aria-modal="true" aria-labelledby="tips-title">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col">
+            <div
+                class="flex justify-between items-center p-4 border-b dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
+                <h3 id="tips-title" class="text-xl font-semibold text-green-600 dark:text-green-400">...</h3>
+                <button id="tips-close-button"
+                    class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"
+                    aria-label="Close tips">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div id="tips-modal-content" class="p-6 overflow-y-auto ai-content">
+                </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- DOM Element Cache ---
+        const elements = {
+            mainContent: document.getElementById('main-content'),
+            mobileMenuButton: document.getElementById('mobile-menu-button'),
+            mobileMenu: document.getElementById('mobile-menu'),
+            weatherInfo: document.getElementById('weather-info'),
+            weatherSkeleton: document.getElementById('weather-skeleton'),
+            cropAdvisorForm: document.getElementById('crop-advisor-form'),
+            districtSelect: document.getElementById('district'),
+            soilTypeSelect: document.getElementById('soil-type'),
+            soilPhSelect: document.getElementById('soil-ph'),
+            soilNInput: document.getElementById('soil-n'),
+            soilPInput: document.getElementById('soil-p'),
+            soilKInput: document.getElementById('soil-k'),
+            notesInput: document.getElementById('additional-notes'),
+            getLocationBtn: document.getElementById('get-location-btn'),
+            locationStatus: document.getElementById('location-status'),
+            locationDataDisplay: document.getElementById('location-data-display'), // NEW
+            districtManualInput: document.getElementById('district-manual'), // NEW
+            recommendationResult: document.getElementById('recommendation-result'),
+            recommendationSkeleton: document.getElementById('recommendation-skeleton'),
+            featuredCropsGrid: document.getElementById('featured-crops-grid'), // NEW
+            getRecommendationBtn: document.getElementById('get-recommendation-btn'),
+            btnText: document.getElementById('btn-text'),
+            btnSpinner: document.getElementById('btn-spinner'),
+            loginNavButton: document.getElementById('login-nav-button'),
+            loginNavButtonMobile: document.getElementById('login-nav-button-mobile'),
+            aiHelperOpenButton: document.getElementById('ai-helper-open-button'),
+            themeToggleBtn: document.getElementById('theme-toggle'),
+            themeToggleBtnMobile: document.getElementById('theme-toggle-mobile'),
+            aiChatBody: document.getElementById('ai-chat-body'),
+            aiChatInput: document.getElementById('ai-chat-input'),
+            aiChatSend: document.getElementById('ai-chat-send'),
+            // New Modal Elements
+            reportModalContent: document.getElementById('report-modal-content'),
+            tipsModalTitle: document.getElementById('tips-title'),
+            tipsModalContent: document.getElementById('tips-modal-content'),
+            loginForm: document.querySelector('#login-modal form'),
+            registerForm: document.querySelector('#register-modal form'),
+            loginEmailInput: document.getElementById('email'),
+            loginPasswordInput: document.getElementById('password'),
+            regNameInput: document.getElementById('reg-name'),
+            regEmailInput: document.getElementById('reg-email'),
+            regPasswordInput: document.getElementById('reg-password'),
+        };
+
+        //  --- Django CSRF Token Helper ---
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        // --- Global State ---
+        const appState = {
+            currentWeather: null, // To store mock weather data
+            currentLocation: null, // To store lat/lon
+            lastFullReport: null, // To store the full AI JSON response
+            lastUserInputs: null // To store what the user submitted
+        };
+
+        // --- Icon Initialization ---
+        try {
+            lucide.createIcons();
+        } catch (error) {
+            console.error('Failed to initialize icons:', error);
+        }
+
+        // --- Theme Toggle Logic ---
+        const toggleTheme = () => {
+            const isDarkMode = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDarkMode ? 'dark' : 'light';
+        };
+        elements.themeToggleBtn.addEventListener('click', toggleTheme);
+        elements.themeToggleBtnMobile.addEventListener('click', toggleTheme);
+
+        // --- Mobile Menu Toggle ---
+        function toggleMobileMenu() {
+            const isExpanded = elements.mobileMenu.classList.toggle('hidden');
+            elements.mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
+        }
+        elements.mobileMenuButton.addEventListener('click', toggleMobileMenu);
+
+        // --- Smooth Scrolling for Anchors ---
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                    if (!elements.mobileMenu.classList.contains('hidden')) {
+                        toggleMobileMenu();
+                    }
+                }
+            });
+        });
+
+        // --- Smooth Modal Class ---
+        class Modal {
+            constructor(modalId, backdropId, openTriggerIds, closeTriggerIds) {
+                this.modal = document.getElementById(modalId);
+                this.backdrop = document.getElementById(backdropId);
+                if (!this.modal || !this.backdrop) {
+                    console.error(`Modal or backdrop not found for ${modalId}`);
+                    return;
+                }
+                this.openTriggers = openTriggerIds.map(id => document.getElementById(id)).filter(Boolean);
+                this.closeTriggers = closeTriggerIds.map(id => document.getElementById(id)).filter(Boolean);
+                this.open = this.open.bind(this);
+                this.close = this.close.bind(this);
+                this.handleKeydown = this.handleKeydown.bind(this);
+                this.openTriggers.forEach(trigger => trigger.addEventListener('click', this.open));
+                this.closeTriggers.forEach(trigger => trigger.addEventListener('click', this.close));
+                this.backdrop.addEventListener('click', this.close);
+            }
+            open(e) {
+                if (e) e.preventDefault();
+                this.modal.classList.add('is-visible');
+                this.backdrop.classList.add('is-visible');
+                const focusableElements = this.modal.querySelectorAll('a[href], button, textarea, input, select');
+                this.firstFocusable = focusableElements[0];
+                this.lastFocusable = focusableElements[focusableElements.length - 1];
+                this.firstFocusable?.focus();
+                document.addEventListener('keydown', this.handleKeydown);
+                this.lastActiveElement = document.activeElement;
+            }
+            close() {
+                this.modal.classList.remove('is-visible');
+                this.backdrop.classList.remove('is-visible');
+                document.removeEventListener('keydown', this.handleKeydown);
+                this.lastActiveElement?.focus();
+            }
+            handleKeydown(e) {
+                if (e.key === 'Escape') this.close();
+                if (e.key === 'Tab') {
+                    if (e.shiftKey) {
+                        if (document.activeElement === this.firstFocusable) {
+                            this.lastFocusable?.focus();
+                            e.preventDefault();
+                        }
+                    } else {
+                        if (document.activeElement === this.lastFocusable) {
+                            this.firstFocusable?.focus();
+                            e.preventDefault();
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- Copilot-Style Side Panel Class ---
+        class SidePanel {
+            constructor(panelId, backdropId, openTriggerId, closeTriggerId, mainContentId) {
+                this.panel = document.getElementById(panelId);
+                this.backdrop = document.getElementById(backdropId);
+                this.openTrigger = document.getElementById(openTriggerId);
+                this.closeTrigger = document.getElementById(closeTriggerId);
+                this.mainContent = document.getElementById(mainContentId);
+                if (!this.panel || !this.backdrop || !this.openTrigger || !this.closeTrigger || !this.mainContent) {
+                    console.error("SidePanel initialization failed. Missing elements.");
+                    return;
+                }
+                this.open = this.open.bind(this);
+                this.close = this.close.bind(this);
+                this.openTrigger.addEventListener('click', this.open);
+                this.closeTrigger.addEventListener('click', this.close);
+                this.backdrop.addEventListener('click', this.close);
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.panel.classList.contains('is-visible')) {
+                        this.close();
+                    }
+                });
+            }
+            open(e) {
+                if (e) e.preventDefault();
+                this.panel.classList.add('is-visible');
+                this.backdrop.classList.add('is-visible');
+                const panelWidthPx = "448px";
+                document.documentElement.style.marginRight = panelWidthPx;
+                this.openTrigger.classList.add('scale-0');
+            }
+            close() {
+                this.panel.classList.remove('is-visible');
+                this.backdrop.classList.remove('is-visible');
+                document.documentElement.style.marginRight = '0';
+                this.openTrigger.classList.remove('scale-0');
+            }
+        }
+
+        // Initialize Modals
+        const loginModal = new Modal(
+            'login-modal',
+            'login-modal-backdrop',
+            ['login-nav-button', 'login-nav-button-mobile', 'show-login-button'],
+            ['login-close-button']
+        );
+        const registerModal = new Modal(
+            'register-modal',
+            'register-modal-backdrop',
+            ['show-register-button'],
+            ['register-close-button']
+        );
+        const reportModal = new Modal(
+            'report-modal',
+            'report-modal-backdrop',
+            [], // Opened programmatically
+            ['report-close-button']
+        );
+        const tipsModal = new Modal(
+            'tips-modal',
+            'tips-modal-backdrop',
+            [], // Opened programmatically
+            ['tips-close-button']
+        );
+
+        // Initialize Side Panel
+        const aiHelperPanel = new SidePanel(
+            'ai-helper-panel',
+            'ai-helper-panel-backdrop',
+            'ai-helper-open-button',
+            'ai-helper-close-button',
+            'main-content'
+        );
+
+        // Add event listeners for login/register forms
+        elements.loginForm.addEventListener('submit', handleLoginSubmit);
+        elements.registerForm.addEventListener('submit', handleRegisterSubmit);
+
+        // Switcher logic
+        document.getElementById('show-register-button')?.addEventListener('click', () => {
+            loginModal.close();
+            registerModal.open();
+        });
+        document.getElementById('show-login-button')?.addEventListener('click', () => {
+            registerModal.close();
+            loginModal.open();
+        });
+
+        // --- Weather API Service (Live) ---
+        class WeatherService {
+            constructor() { }
+            async getLiveWeather(lat, lon) {
+                elements.weatherSkeleton.classList.remove('hidden');
+                const response = await fetch(`/api/dashboard/weather/?lat=${lat}&lon=${lon}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch weather');
+                }
+                const data = await response.json();
+                this.weatherData = data;
+                appState.currentWeather = data;
+                return data;
+            }
+            renderWeather(data) {
+                const weatherHtml = `
+                    <div class="flex justify-center items-center mb-2">
+                        <img src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" alt="${data.weather[0].description}" class="w-16 h-16 drop-shadow-lg" loading="lazy">
+                        <p class="text-5xl font-bold text-gray-800 dark:text-gray-200">${Math.round(data.main.temp)}°C</p>
+                    </div>
+                    <p class="text-lg text-gray-700 dark:text-gray-300 capitalize text-center">${data.weather[0].description}</p>
+                    <div class="grid grid-cols-2 gap-2 mt-4 text-sm text-gray-600 dark:text-gray-300">
+                        <p><strong>Humidity:</strong> ${data.main.humidity}%</p>
+                        <p><strong>Wind:</strong> ${data.wind.speed} m/s</p>
+                        <p><strong>Feels Like:</strong> ${Math.round(data.main.feels_like)}°C</p>
+                        <p><strong>Pressure:</strong> ${data.main.pressure} hPa</p>
+                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-2 text-center">Last updated: ${new Date().toLocaleTimeString()}</p>
+                `;
+                elements.weatherInfo.innerHTML = weatherHtml;
+            }
+            renderError() {
+                elements.weatherInfo.innerHTML = `
+                    <div class="text-red-500 dark:text-red-400 p-4 rounded-lg bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700">
+                        <p class="font-medium">Unable to load weather data</p>
+                        <p class="text-sm mt-1">Error fetching from backend. Check API key.</p>
+                    </div>`;
+            }
+            async updateWeather(lat = 30.3165, lon = 78.0322) { // Default to Dehradun
+                try {
+                    const data = await this.getLiveWeather(lat, lon);
+                    this.renderWeather(data);
+                } catch (error) {
+                    console.error('Weather fetch error:', error);
+                    this.renderError();
+                }
+            }
+        }
+        
+        // --- Market Price Service ---
+        async function updateMarketPrices(mandi = 'Dehradun') {
+            const tableBody = document.getElementById('market-prices-body');
+            const skeletonRow = document.getElementById('market-price-skeleton');
+
+            try {
+                const response = await fetch(`/api/dashboard/market-prices/?mandi=${mandi}`);
+                if (!response.ok) throw new Error('Failed to fetch market prices');
+                const prices = await response.json();
+                
+                tableBody.innerHTML = ''; // Clear the skeleton loader
+
+                if (prices.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500">No market data found for this mandi.</td></tr>';
+                    return;
+                }
+
+                prices.forEach(item => {
+                    const trendColor = item.trend_icon === 'trending-up'
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-red-600 dark:text-red-400';
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200';
+                    row.innerHTML = `
+                        <td class="p-3">${item.crop}</td>
+                        <td class="p-3">${item.variety || 'N/A'}</td>
+                        <td class="p-3 font-semibold">${item.price}</td>
+                        <td class="p-3 ${trendColor} flex items-center">
+                            <i data-lucide="${item.trend_icon}" class="mr-1 w-4 h-4"></i> ${item.trend}
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Market Price fetch error:', error);
+                if (skeletonRow) skeletonRow.remove();
+                tableBody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-500">Error loading market prices.</td></tr>`;
+            }
+        }
+
+        // --- **FIX 2: CORRECTED INITIAL PAGE LOAD CALLS** ---
+        const weatherService = new WeatherService();
+        weatherService.updateWeather(); // Fetch weather on load
+        updateMarketPrices(); // Fetch market prices on load
+        
+
+        // --- Precision Crop Advisor Logic ---
+        class PrecisionCropAdvisor {
+            constructor() {
+                // --- **FIX 3: REMOVED ALL SYNTAX ERRORS (apiKey, apiUrl, featuredCropData object)** ---
+                this.setupEventListeners();
+                this.updateFeaturedCrops('general'); // Load default crops
+            }
+
+            setupEventListeners() {
+                elements.cropAdvisorForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleRecommendationRequest();
+                });
+
+                const inputs = [elements.districtSelect, elements.soilTypeSelect, elements.soilPhSelect, elements.districtManualInput];
+                inputs.forEach(input => {
+                    input.addEventListener('change', () => this.validateInputs());
+                });
+
+                elements.districtSelect.addEventListener('change', () => this.updateFeaturedCrops(elements.districtSelect.value));
+                elements.districtManualInput.addEventListener('input', (e) => this.updateFeaturedCrops(e.target.value));
+                elements.getLocationBtn.addEventListener('click', () => this.handleLocationRequest());
+            }
+
+            validateInputs() {
+                const district = elements.districtSelect.value;
+                const districtManual = elements.districtManualInput.value.trim();
+                const soilType = elements.soilTypeSelect.value;
+                const soilPh = elements.soilPhSelect.value;
+                if ((district || districtManual) && soilType && soilPh) {
+                    elements.getRecommendationBtn.disabled = false;
+                    elements.getRecommendationBtn.classList.remove("opacity-50", "cursor-not-allowed", "disabled:hover:scale-100", "disabled:hover:shadow-lg");
+                } else {
+                    elements.getRecommendationBtn.disabled = true;
+                    elements.getRecommendationBtn.classList.add("opacity-50", "cursor-not-allowed", "disabled:hover:scale-100", "disabled:hover:shadow-lg");
+                }
+            }
+
+            async updateFeaturedCrops(districtKey) {
+                let key = districtKey.toLowerCase().trim() || 'general';
+                this.showFeaturedCropsSkeleton();
+                try {
+                    const response = await fetch(`/api/dashboard/featured-crops/?district=${key}`);
+                    if (!response.ok) throw new Error('Failed to fetch featured crops');
+                    const cropList = await response.json();
+                    if (cropList.length === 0) {
+                        elements.featuredCropsGrid.innerHTML = '<p class="text-center text-gray-500 col-span-3">No featured crops found for this area.</p>';
+                        return;
+                    }
+                    elements.featuredCropsGrid.innerHTML = cropList.map(crop => {
+                        const searchTerm = encodeURIComponent(crop.searchTerm || crop.name.split('(')[0].trim());
+                        return `
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden card-hover card-recommendation-item">
+                            <img src="https://source.unsplash.com/600x400/?${searchTerm},farm" alt="${crop.name}" class="w-full h-48 object-cover" loading="lazy" onerror="this.src='https://placehold.co/600x400/22c55e/FFFFFF?text=Crop+Image'; this.onerror=null;">
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold mb-2">${crop.name}</h3>
+                                <p class="text-gray-600 dark:text-gray-300 mb-4">${crop.desc}</p>
+                                <span class="inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full">${crop.tag}</span>
+                            </div>
+                        </div>
+                        `;
+                    }).join('');
+                } catch (error) {
+                    console.error('Failed to update featured crops:', error);
+                    elements.featuredCropsGrid.innerHTML = '<p class="text-center text-red-500 col-span-3">Error loading featured crops.</p>';
+                }
+            }
+            
+            showFeaturedCropsSkeleton() {
+                elements.featuredCropsGrid.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden card-hover">
+                    <div class="w-full h-48 skeleton"></div>
+                    <div class="p-6">
+                        <div class="skeleton skeleton-title w-3/4 mb-4"></div>
+                        <div class="skeleton skeleton-text mb-2"></div>
+                        <div class="skeleton skeleton-text w-5/6 mb-4"></div>
+                        <div class="skeleton skeleton-text w-1/3 h-6 rounded-full"></div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden card-hover">
+                    <div class="w-full h-48 skeleton"></div>
+                    <div class="p-6">
+                        <div class="skeleton skeleton-title w-3/4 mb-4"></div>
+                        <div class="skeleton skeleton-text mb-2"></div>
+                        <div class="skeleton skeleton-text w-5/6 mb-4"></div>
+                        <div class="skeleton skeleton-text w-1/3 h-6 rounded-full"></div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden card-hover">
+                    <div class="w-full h-48 skeleton"></div>
+                    <div class="p-6">
+                        <div class="skeleton skeleton-title w-3/4 mb-4"></div>
+                        <div class="skeleton skeleton-text mb-2"></div>
+                        <div class="skeleton skeleton-text w-5/6 mb-4"></div>
+                        <div class="skeleton skeleton-text w-1/3 h-6 rounded-full"></div>
+                    </div>
+                </div>
+                `;
+            }
+
+            handleLocationRequest() {
+                if (!navigator.geolocation) {
+                    elements.locationStatus.textContent = "Geolocation is not supported by your browser.";
+                    elements.locationStatus.className = 'text-sm text-red-500 dark:text-red-400';
+                    return;
+                }
+                elements.locationStatus.textContent = "Fetching location...";
+                elements.locationStatus.className = 'text-sm text-blue-600 dark:text-blue-400';
+                elements.locationDataDisplay.classList.add('hidden');
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        appState.currentLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        };
+                        elements.locationStatus.textContent = `Location found: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
+                        elements.locationStatus.className = 'text-sm text-green-600 dark:text-green-400';
+                        if (!elements.districtSelect.value && !elements.districtManualInput.value) {
+                            elements.districtSelect.value = 'dehradun';
+                        }
+                        
+                        // Now that we have a location, fetch the weather for it
+                        weatherService.updateWeather(position.coords.latitude, position.coords.longitude)
+                            .then(() => {
+                                // This ensures appState.currentWeather is set before we try to read it
+                                if (appState.currentWeather) {
+                                    const w = appState.currentWeather;
+                                    const windDir = w.wind.deg ? `(${w.wind.deg}°)` : '';
+                                    document.getElementById('data-temp').textContent = `${Math.round(w.main.temp)}°C`;
+                                    document.getElementById('data-humidity').textContent = `${w.main.humidity}%`;
+                                    document.getElementById('data-wind').textContent = `${w.wind.speed} m/s ${windDir}`;
+                                    document.getElementById('data-feels-like').textContent = `${Math.round(w.main.feels_like)}°C`;
+                                    elements.locationDataDisplay.classList.remove('hidden');
+                                    lucide.createIcons();
+                                }
+                            });
+                        
+                        this.validateInputs();
+                    },
+                    (error) => {
+                        let errorMsg = "Error fetching location.";
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED: errorMsg = "Location access denied."; break;
+                            case error.POSITION_UNAVAILABLE: errorMsg = "Location information is unavailable."; break;
+                            case error.TIMEOUT: errorMsg = "Location request timed out."; break;
+                        }
+                        elements.locationStatus.textContent = errorMsg;
+                        elements.locationStatus.className = 'text-sm text-red-500 dark:text-red-400';
+                        appState.currentLocation = null;
+                        elements.locationDataDisplay.classList.add('hidden');
+                    }
+                );
+            }
+
+            setLoading(isLoading) {
+                if (isLoading) {
+                    elements.getRecommendationBtn.disabled = true;
+                    elements.getRecommendationBtn.classList.add("opacity-50", "cursor-not-allowed");
+                    elements.btnText.classList.add('hidden');
+                    elements.btnSpinner.classList.remove('hidden');
+                    elements.recommendationResult.innerHTML = '';
+                    elements.recommendationSkeleton.classList.remove('hidden');
+                    elements.recommendationResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    this.validateInputs();
+                    elements.btnText.classList.remove('hidden');
+                    elements.btnSpinner.classList.add('hidden');
+                    elements.recommendationSkeleton.classList.add('hidden');
+                }
+            }
+
+            // --- **FIX 4: DELETED the old, duplicate handleRecommendationRequest & buildPrompt functions** ---
+
+            // This is the NEW, correct handleRecommendationRequest function
+            async handleRecommendationRequest() {
+                const district = elements.districtSelect.value;
+                const districtManual = elements.districtManualInput.value.trim();
+                const districtValue = districtManual || district;
+
+                const userInputs = {
+                    district: districtValue,
+                    soilType: elements.soilTypeSelect.value,
+                    soilPh: elements.soilPhSelect.value,
+                    nitrogen: elements.soilNInput.value,
+                    phosphorus: elements.soilPInput.value,
+                    potassium: elements.soilKInput.value,
+                    notes: elements.notesInput.value,
+                    latitude: appState.currentLocation ? appState.currentLocation.latitude : null,
+                    longitude: appState.currentLocation ? appState.currentLocation.longitude : null,
+                    weatherString: appState.currentWeather ? `Current temp: ${appState.currentWeather.main.temp}°C` : 'Weather not loaded.'
+                };
+                appState.lastUserInputs = userInputs;
+
+                if (!userInputs.district || !userInputs.soilType || !userInputs.soilPh) return;
+
+                this.setLoading(true);
+
+                try {
+                    const jsonResponse = await this.fetchRecommendationsFromBackend(userInputs);
+                    appState.lastFullReport = jsonResponse;
+                    this.displayRecommendationsAsCards(jsonResponse.recommendations);
+                } catch (error) {
+                    console.error('Backend API Error:', error);
+                    this.showError(error.message || 'An error occurred while fetching recommendations.');
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+
+            // --- **FIX 5: Corrected 'cconst' to 'const'** ---
+            async fetchRecommendationsFromBackend(inputs) {
+                const response = await fetch('/api/advisor/recommend/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify(inputs)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to get recommendation from server.');
+                }
+
+                return await response.json();
+            }
+
+
+            displayRecommendationsAsCards(recommendations) {
+                elements.recommendationResult.innerHTML = '';
+                const titleEl = document.createElement('h3');
+                titleEl.className = 'text-2xl font-bold text-center text-gray-800 dark:text-gray-200 mb-6';
+                titleEl.textContent = 'Your Top 3 AI Recommendations';
+                elements.recommendationResult.appendChild(titleEl);
+                const gridEl = document.createElement('div');
+                gridEl.className = 'grid grid-cols-1 md:grid-cols-3 gap-6';
+                elements.recommendationResult.appendChild(gridEl);
+
+                recommendations.forEach((crop, index) => {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 shadow-xl card-hover card-recommendation-item flex flex-col justify-between overflow-hidden';
+                    cardEl.style.animationDelay = `${index * 100}ms`;
+                    const searchTerm = encodeURIComponent(crop.cropName.split('(')[0].trim());
+                    cardEl.innerHTML = `
+                        <div>
+                            <img src="https://source.unsplash.com/600x400/?${searchTerm},farm,field" alt="${crop.cropName}" class="w-full h-40 object-cover" loading="lazy" onerror="this.src='https://placehold.co/600x400/22c55e/FFFFFF?text=Crop+Image'; this.onerror=null;">
+                            <div class="p-6">
+                                <h4 class="text-xl font-semibold text-green-700 dark:text-green-400 mb-2">${crop.cropName}</h4>
+                                <p class="text-gray-600 dark:text-gray-300 my-2 text-sm">${crop.rationale}</p>
+                            </div>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <button class="view-tips-btn w-full bg-green-100 dark:bg-green-800 dark:border dark:border-green-700 text-green-700 dark:text-green-200 font-medium py-2 px-4 rounded-lg hover:bg-green-200 dark:hover:bg-green-700 transition duration-300 transform hover:scale-105" data-index="${index}">
+                                View Hacks & Tips
+                            </button>
+                        </div>
+                    `;
+                    gridEl.appendChild(cardEl);
+                });
+
+                const fullReportBtn = document.createElement('button');
+                fullReportBtn.id = 'view-full-report-btn';
+                fullReportBtn.className = 'mt-8 w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-lg transition-all duration-300 flex items-center justify-center mx-auto shadow-lg hover:shadow-blue-500/30 transform hover:scale-105';
+                fullReportBtn.innerHTML = `<i data-lucide="file-text" class="w-5 h-5 mr-2"></i> View Full AI Report`;
+                elements.recommendationResult.appendChild(fullReportBtn);
+                lucide.createIcons();
+
+                document.querySelectorAll('.view-tips-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = e.currentTarget.getAttribute('data-index');
+                        this.openTipsModal(appState.lastFullReport.recommendations[index]);
+                    });
+                });
+                document.getElementById('view-full-report-btn').addEventListener('click', () => {
+                    this.openReportModal(appState.lastFullReport.fullReport, appState.lastUserInputs);
+                });
+            }
+
+            openTipsModal(cropData) {
+                elements.tipsModalTitle.textContent = `Tips for ${cropData.cropName}`;
+                elements.tipsModalContent.innerHTML = `
+                    <h3><i data-lucide="seedling"></i>Growing Guide</h3>
+                    ${this.renderMarkdown(cropData.growingGuide)}
+                    <h3><i data-lucide="trending-up"></i>Market Strategy</h3>
+                    ${this.renderMarkdown(cropData.marketStrategy)}
+                `;
+                lucide.createIcons();
+                tipsModal.open();
+            }
+
+            openReportModal(fullReport, userInputs) {
+                const userInputHtml = `
+                    <div class="flex justify-end mb-2">
+                        <div class="chat-bubble-user p-4 rounded-lg max-w-lg shadow-sm">
+                            <p class="font-semibold mb-2">My Farm Details:</p>
+                            <ul class="list-disc list-inside text-sm space-y-1">
+                                <li><strong>District:</strong> ${userInputs.district}</li>
+                                <li><strong>Soil Type:</strong> ${userInputs.soilType}</li>
+                                <li><strong>Soil pH:</strong> ${userInputs.soilPh}</li>
+                                ${userInputs.nitrogen ? `<li><strong>Nitrogen:</strong> ${userInputs.nitrogen} kg/ha</li>` : ''}
+                                ${userInputs.phosphorus ? `<li><strong>Phosphorus:</strong> ${userInputs.phosphorus} kg/ha</li>` : ''}
+                                ${userInputs.potassium ? `<li><strong>Potassium:</strong> ${userInputs.potassium} kg/ha</li>` : ''}
+                                ${userInputs.notes ? `<li><strong>Notes:</strong> ${userInputs.notes}</li>` : ''}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                const aiResponseHtml = `
+                    <div class="flex justify-start">
+                        <div class="chat-bubble-ai p-4 rounded-lg max-w-lg shadow-sm">
+                            <div class="ai-content">
+                                ${this.renderMarkdown(fullReport)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                elements.reportModalContent.innerHTML = userInputHtml + aiResponseHtml;
+                reportModal.open();
+            }
+
+            renderMarkdown(text) {
+                if (!text) return '<p>No details provided.</p>';
+                let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                safeText = safeText.replace(/^### (.*$)/gm, '<h3><i data-lucide="leaf"></i> $1</h3>');
+                safeText = safeText.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+                safeText = safeText.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+                safeText = safeText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                safeText = safeText.replace(/^\* (.*$)/gm, '<li>$1</li>');
+                safeText = safeText.replace(/<\/li>\n<li>/g, '</li><li>');
+                safeText = safeText.replace(/((?:<li>.*?<\/li>\n?)+)/g, '<ul>\n$1</ul>\n');
+                safeText = safeText.split('\n').map(line => {
+                    if (line.trim() === '') return '';
+                    if (line.startsWith('<h') || line.startsWith('<ul') || line.startsWith('<li') || line.startsWith('</ul')) {
+                        return line;
+                    }
+                    return `<p>${line}</p>`;
+                }).join('\n');
+                safeText = safeText.replace(/<p><\/p>/g, '');
+                return safeText;
+            }
+
+            showError(message) {
+                elements.recommendationResult.innerHTML = `<div class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-3 rounded relative" role="alert"><p class="font-bold">Error Generating Report</p><p class="text-sm">${message}</p><p class="text-xs mt-2">This can happen if the AI response is not formatted correctly. Please try again.</p></div>`;
+            }
+        }
+        const cropAdvisor = new PrecisionCropAdvisor();
+
+
+        // --- User Authentication Handlers ---
+        async function handleRegisterSubmit(event) {
+            event.preventDefault();
+            const name = elements.regNameInput.value;
+            const email = elements.regEmailInput.value;
+            const password = elements.regPasswordInput.value;
+            try {
+                const response = await fetch('/api/users/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Registration failed');
+                }
+                registerModal.close();
+                updateLoginState(data.user);
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function handleLoginSubmit(event) {
+            event.preventDefault();
+            const email = elements.loginEmailInput.value;
+            const password = elements.loginPasswordInput.value;
+            try {
+                const response = await fetch('/api/users/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Login failed');
+                }
+                loginModal.close();
+                updateLoginState(data.user);
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch('/api/users/logout/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken }
+                });
+            } catch (error) {
+                console.error('Logout failed:', error);
+            } finally {
+                window.location.reload();
+            }
+        }
+
+        function updateLoginState(userEmail) {
+            elements.loginNavButton.textContent = 'Logout';
+            elements.loginNavButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+            elements.loginNavButton.classList.add('bg-red-600', 'hover:bg-red-700');
+            elements.loginNavButton.removeEventListener('click', loginModal.open);
+            // --- **FIX 6: Removed the stray '*'** ---
+            elements.loginNavButton.addEventListener('click', handleLogout); 
+            elements.loginNavButtonMobile.textContent = 'Logout';
+            elements.loginNavButtonMobile.classList.remove('bg-green-600', 'hover:bg-green-700');
+            elements.loginNavButtonMobile.classList.add('bg-red-600', 'hover:bg-red-700');
+            elements.loginNavButtonMobile.removeEventListener('click', loginModal.open);
+            elements.loginNavButtonMobile.addEventListener('click', handleLogout);
+        }
+
+        // --- UPDATED AI Helper Logic (Side Panel) ---
+        function appendAiMessage(message, isUser = false, isTyping = false) {
+            const chatBody = elements.aiChatBody;
+            const msgDiv = document.createElement('div');
+            let userIcon = `<span class="flex-shrink-0 bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200 rounded-full p-2 w-8 h-8 flex items-center justify-center"><i data-lucide="user" class="w-5 h-5"></i></span>`;
+            let botIcon = `<span class="flex-shrink-0 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200 rounded-full p-2 w-8 h-8 flex items-center justify-center"><i data-lucide="bot" class="w-5 h-5"></i></span>`;
+            let msgText = isTyping
+                ? '<span class="italic">Typing...</span>'
+                : `<p class="text-sm break-words">${message}</p>`;
+            let msgBubble = `<div class="ml-3 bg-gray-100 dark:bg-gray-700 rounded-lg p-3 max-w-xs">${msgText}</div>`;
+            if (isUser) {
+                msgDiv.className = 'flex justify-end';
+                msgBubble = `<div class="mr-3 bg-green-600 text-white rounded-lg p-3 max-w-xs"><p class="text-sm break-words">${message}</p></div>`;
+                msgDiv.innerHTML = msgBubble + userIcon;
+            } else {
+                msgDiv.className = 'flex';
+                msgDiv.innerHTML = botIcon + msgBubble;
+            }
+            chatBody.appendChild(msgDiv);
+            lucide.createIcons();
+            chatBody.scrollTop = chatBody.scrollHeight;
+            return msgDiv;
+        }
+
+        async function handleAiChatSubmit() {
+            const text = elements.aiChatInput.value.trim();
+            if (!text) return;
+
+            appendAiMessage(text, true);
+            elements.aiChatInput.value = '';
+            elements.aiChatSend.disabled = true;
+
+            const typingBubble = appendAiMessage("Typing...", false, true);
+
+            try {
+                const response = await fetch('/api/advisor/chat/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await response.json();
+                typingBubble.remove();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to get response');
+                }
+                appendAiMessage(data.response, false);
+            } catch (error) {
+                console.error('AI Chat Error:', error);
+                if (typingBubble) typingBubble.remove();
+                appendAiMessage(`Sorry, an error occurred: ${error.message}`, false);
+            } finally {
+                elements.aiChatSend.disabled = false;
+                elements.aiChatInput.focus();
+            }
+        }
+
+        elements.aiChatSend.addEventListener('click', handleAiChatSubmit);
+        elements.aiChatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAiChatSubmit();
+            }
+        });
+
+        // --- **FIX 7: Removed the "(This is a demo)" text** ---
+        appendAiMessage("Hello! I'm your AI assistant. Ask me a question about crops in Uttarakhand.");
+
+    </script>
+</body>
+
+</html>
